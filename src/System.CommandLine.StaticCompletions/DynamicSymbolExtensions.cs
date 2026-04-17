@@ -19,7 +19,8 @@ public static class DynamicSymbolExtensions
     extension(Option option)
     {
         /// <summary>
-        /// Indicates whether this option requires a dynamic call into the dotnet process to compute completions.
+        /// Indicates whether this option requires a dynamic call back into the application itself
+        /// (via the configured <see cref="CompletionInvocation"/>) to compute completions at completion time.
         /// </summary>
         public bool IsDynamic
         {
@@ -43,7 +44,8 @@ public static class DynamicSymbolExtensions
     extension(Argument argument)
     {
         /// <summary>
-        /// Indicates whether this argument requires a dynamic call into the dotnet process to compute completions.
+        /// Indicates whether this argument requires a dynamic call back into the application itself
+        /// (via the configured <see cref="CompletionInvocation"/>) to compute completions at completion time.
         /// </summary>
         public bool IsDynamic
         {

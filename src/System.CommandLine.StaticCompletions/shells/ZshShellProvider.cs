@@ -195,10 +195,9 @@ fi
         writer.Indent++;
         writer.WriteLine($"({command.Name})");
         writer.Indent++;
-        // the 'dotnet' CLI has a hidden subcommand argument that I've tried to get rid of (https://github.com/dotnet/sdk/blob/663b9f78e4c79ce6693368865ee50b3f4c297589/src/Cli/dotnet/Parser.cs#L83)
-        // but it's load-bearing and I haven't been able to rip it out yet. No where else seems to have this hidden argument, so for tracking purposes
-        // we can skip it here.
-        // in addition, optional arguments interfere with position counting, so we need to skip them as well.
+        // skip hidden arguments and any arguments inherited from parent commands when computing the
+        // position of this subcommand's word on the line - those don't show up as positional slots
+        // that the user actually types, but they would throw off the counting if included.
         var parentArguments = command.Parents.OfType<Command>().SelectMany(parent => parent.Arguments).Select(arg => arg.Name).ToHashSet();
         var pos = command.Arguments.Where(a => !parentArguments.Contains(a.Name) && !a.Hidden).Count() + 1;
         writer.WriteLine($$"""words=($line[{{pos}}] "${words[@]}")""");

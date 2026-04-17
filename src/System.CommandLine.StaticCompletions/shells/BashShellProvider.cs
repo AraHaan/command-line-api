@@ -75,7 +75,7 @@ public class BashShellProvider : IShellProvider
         }
         writer.WriteLine();
 
-        // emit a short-circuit for when the first argument index (COMP_CWORD) is 1 (aka "dotnet")
+        // emit a short-circuit for when the first argument index (COMP_CWORD) is 1 (the top-level command word)
         // in this short-circuit we'll just use the choices we set up above in $opts
         writer.WriteLine($"""if [[ $COMP_CWORD == "{dollarOne}" ]]; then""");
         writer.Indent++;
