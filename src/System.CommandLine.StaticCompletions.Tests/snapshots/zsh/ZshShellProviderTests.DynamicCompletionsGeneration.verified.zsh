@@ -15,13 +15,13 @@ _my-app() {
 
     local context curcontext="$curcontext" state state_descr line
     _arguments "${_arguments_options[@]}" : \
-        '--static=[]: :->dotnet_dynamic_complete' \
-        ':--dynamic:->dotnet_dynamic_complete' \
+        '--static=[]: :->suggest' \
+        ':--dynamic:->suggest' \
         && ret=0
         case $state in
-            (dotnet_dynamic_complete)
+            (suggest)
                 local completions=()
-                local result=$(dotnet complete -- "${original_args[@]}")
+                local result=$(my-app "[suggest:${#original_args}]" "${original_args}" 2>/dev/null)
                 for line in ${(f)result}; do
                     completions+=(${(q)line})
                 done

@@ -44,4 +44,11 @@ public class PowershellProviderTests(ITestOutputHelper log)
             }
         }, log);
     }
+
+    [Fact]
+    public async Task DynamicCompletionsGeneration()
+    {
+        var dynamicArg = new Argument<string>("target") { IsDynamic = true };
+        await provider.Verify(new("mycommand") { dynamicArg }, log);
+    }
 }

@@ -42,4 +42,12 @@ public class BashShellProviderTests(ITestOutputHelper log)
             }
         }, log);
     }
+
+    [Fact]
+    public async Task DynamicCompletionsGeneration()
+    {
+        var dynamicOption = new Option<string>("--name") { IsDynamic = true };
+        var dynamicArg = new Argument<string>("target") { IsDynamic = true };
+        await provider.Verify(new("mycommand") { dynamicOption, dynamicArg }, log);
+    }
 }

@@ -149,13 +149,11 @@ public class BashShellProvider : IShellProvider
     }
 
     /// <summary>
-    /// Generates a call to <code>dotnet complete &lt;string&gt; --position &lt;int&gt;</code> for dynamic completions where necessary, but in a more generic way
+    /// Generates a call that invokes the application's built-in <c>[suggest]</c> directive to produce dynamic completions.
     /// </summary>
-    /// <returns></returns>
-    /// <remarks>TODO: this is currently bound to the .NET CLI's 'dotnet complete' command - this should be definable/injectable per-host instead.</remarks>
     internal static string GenerateDynamicCall()
     {
-        return $$"""${COMP_WORDS[0]} complete --position ${COMP_POINT} ${COMP_LINE} 2>/dev/null | tr '\n' ' '""";
+        return $$"""${COMP_WORDS[0]} "[suggest:${COMP_POINT}]" "${COMP_LINE}" 2>/dev/null | tr '\n' ' '""";
     }
 
     internal static string? GenerateOptionHandlers(Command command)
@@ -174,14 +172,14 @@ public class BashShellProvider : IShellProvider
     /// </summary>
     /// <param name="choicesInvocation">The expression used to generate the set of choices - will be passed to compgen with the -W flag, so should be either
     /// * a concrete set of choices in a bash array already ($opts), or
-    /// * a subprocess that will return such an array (aka '(dotnet complete --position 10 'dotnet ad')') </param>
+    /// * a subprocess that will return such an array. </param>
     /// <returns></returns>
     internal static string GenerateChoicesPrompt(string choicesInvocation) => $$"""COMPREPLY=( $(compgen -W "{{choicesInvocation}}" -- "$cur") )""";
 
     /// <summary>
     /// Generates a concrete set of bash completion selection for a given option.
-    /// If the option's completions are dynamic, this will emit a call to the dynamic completion function (dotnet complete)
-    /// to get completions when the user requests completions for this option.
+    /// If the option's completions are dynamic, this will emit a call to the application's built-in
+    /// <c>[suggest]</c> directive to get completions when the user requests completions for this option.
     /// </summary>
     /// <param name="option"></param>
     /// <returns>a bash switch case expression for providing completions for this option</returns>

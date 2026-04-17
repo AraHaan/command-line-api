@@ -48,7 +48,7 @@ _{{binaryName}}() {
         writer.Indent++;
         writer.WriteLine(ArgumentsHandler());
         writer.Indent++;
-        GenerateOptionsAndArgumentsForCommand(pathToCurrentCommand, command, writer);
+        GenerateOptionsAndArgumentsForCommand(binaryName, pathToCurrentCommand, command, writer);
         writer.Indent--;
 
         // tiny hack here - for dynamic completions we need to know what the entire command line is,
@@ -57,7 +57,7 @@ _{{binaryName}}() {
 
         writer.Indent--;
         writer.Indent++;
-        GenerateSubcommandList(pathToCurrentCommand, command, writer);
+        GenerateSubcommandList(binaryName, pathToCurrentCommand, command, writer);
         writer.Indent--;
         writer.WriteLine("}");
         writer.WriteLine();
@@ -75,7 +75,7 @@ fi
         return textWriter.ToString();
     }
 
-    private static void GenerateOptionsAndArgumentsForCommand(string[] commandPathForThisCommand, Command command, IndentedTextWriter writer)
+    private static void GenerateOptionsAndArgumentsForCommand(string binaryName, string[] commandPathForThisCommand, Command command, IndentedTextWriter writer)
     {
         var shouldWriteDynamicCompleter = false;
         foreach (var option in command.HierarchicalOptions())
@@ -148,7 +148,7 @@ fi
         {
             writer.WriteLine("case $state in");
             writer.Indent++;
-            GenerateDynamicCompleter(writer);
+            GenerateDynamicCompleter(binaryName, writer);
             writer.Indent--;
             writer.WriteLine("esac");
         }
@@ -178,7 +178,7 @@ fi
         }
     }
 
-    private static void GenerateSubcommandList(string[] pathToCurrentCommand, Command command, IndentedTextWriter writer)
+    private static void GenerateSubcommandList(string binaryName, string[] pathToCurrentCommand, Command command, IndentedTextWriter writer)
     {
         if (command.Subcommands.Count == 0)
         {
@@ -209,8 +209,8 @@ fi
             writer.Indent++;
             writer.WriteLine(ArgumentsHandler());
             writer.Indent++;
-            GenerateOptionsAndArgumentsForCommand(pathToSubcommand, subcommand, writer);
-            GenerateSubcommandList(pathToSubcommand, subcommand, writer);
+            GenerateOptionsAndArgumentsForCommand(binaryName, pathToSubcommand, subcommand, writer);
+            GenerateSubcommandList(binaryName, pathToSubcommand, subcommand, writer);
             writer.Indent--;
             writer.WriteLine(";;");
             writer.Indent--;
@@ -223,13 +223,12 @@ fi
         writer.WriteLine("esac");
     }
 
-    private static void GenerateDynamicCompleter(IndentedTextWriter writer)
+    private static void GenerateDynamicCompleter(string binaryName, IndentedTextWriter writer)
     {
-        writer.WriteLine("(dotnet_dynamic_complete)");
+        writer.WriteLine("(suggest)");
         writer.Indent++;
         writer.WriteLine("local completions=()");
-        // TODO: we're directly calling dotnet complete here - we need something pluggable.
-        writer.WriteLine("local result=$(dotnet complete -- \"${original_args[@]}\")");
+        writer.WriteLine($"local result=$({binaryName} \"[suggest:${{#original_args}}]\" \"${{original_args}}\" 2>/dev/null)");
         writer.WriteLine("for line in ${(f)result}; do");
         writer.Indent++;
         writer.WriteLine("completions+=(${(q)line})");
@@ -308,7 +307,7 @@ fi
     {
         if (option.IsDynamic)
         {
-            return ["->dotnet_dynamic_complete"];
+            return ["->suggest"];
         }
         else
         {
@@ -320,7 +319,7 @@ fi
     {
         if (arg.IsDynamic)
         {
-            return ["->dotnet_dynamic_complete"];
+            return ["->suggest"];
         }
         else
         {

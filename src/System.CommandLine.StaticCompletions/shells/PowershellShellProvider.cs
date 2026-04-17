@@ -214,7 +214,7 @@ Register-ArgumentCompleter -Native -CommandName '{{{binaryName}}}' -ScriptBlock 
 
         if (command.Arguments.Any(argument => argument.IsDynamic))
         {
-            GenerateDynamicCompletionsCall(writer);
+            GenerateDynamicCompletionsCall(commandPath[0], writer);
         }
 
         writer.WriteLine("break");
@@ -223,14 +223,14 @@ Register-ArgumentCompleter -Native -CommandName '{{{binaryName}}}' -ScriptBlock 
     }
 
     /// <summary>
-    /// Generate a call into `dotnet complete` for dynamic argument completions, then binds the returned values as CompletionResults.
+    /// Generate a call that invokes the application's built-in <c>[suggest]</c> directive to produce dynamic
+    /// argument completions, then binds the returned values as CompletionResults.
     /// </summary>
-    /// <remarks>TODO: this is currently bound to the .NET CLI's 'dotnet complete' command - this should be definable/injectable per-host instead.</remarks>
-    private static void GenerateDynamicCompletionsCall(IndentedTextWriter writer)
+    private static void GenerateDynamicCompletionsCall(string binaryName, IndentedTextWriter writer)
     {
         writer.WriteLine("$text = $commandAst.ToString()");
-        writer.WriteLine("$dotnetCompleteResults = @(dotnet complete --position $cursorPosition \"$text\") | Where-Object { $_ -NotMatch \"^-|^/\" }");
-        writer.WriteLine("$dynamicCompletions = $dotnetCompleteResults | Foreach-Object { [CompletionResult]::new($_, $_, [CompletionResultType]::ParameterValue, $_) }");
+        writer.WriteLine($"$suggestResults = @(& '{binaryName}' \"[suggest:$cursorPosition]\" $text) | Where-Object {{ $_ -NotMatch \"^-|^/\" }}");
+        writer.WriteLine("$dynamicCompletions = $suggestResults | Foreach-Object { [CompletionResult]::new($_, $_, [CompletionResultType]::ParameterValue, $_) }");
         writer.WriteLine("$completions += $dynamicCompletions");
     }
 

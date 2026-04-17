@@ -16,13 +16,21 @@ public class FishShellProvider : IShellProvider
     // override the ToString method to return the argument name so that CLI help is cleaner for 'default' values
     public override string ToString() => ArgumentName;
 
-    private static readonly string _dynamicCompletionScript =
-        """
-        # fish parameter completion for the dotnet CLI
-        # add the following to your config.fish to enable completions
+    public string GenerateCompletions(System.CommandLine.Command command)
+    {
+        var binary = command.Name;
+        var safeName = binary.Replace('-', '_').Replace('.', '_');
+        return
+            $$"""
+            # fish parameter completion for {{binary}}
+            # add the following to your config.fish to enable completions
 
-        complete -f -c dotnet -a "(dotnet complete (commandline -cp))"
-        """;
-
-    public string GenerateCompletions(System.CommandLine.Command command) => _dynamicCompletionScript;
+            function __{{safeName}}_complete
+                set -l pos (commandline -C)
+                set -l line (commandline -cp)
+                {{binary}} "[suggest:$pos]" $line 2>/dev/null
+            end
+            complete -f -c {{binary}} -a '(__{{safeName}}_complete)'
+            """;
+    }
 }

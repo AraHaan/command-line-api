@@ -16,34 +16,35 @@ public class NushellShellProvider : IShellProvider
     // override the ToString method to return the argument name so that CLI help is cleaner for 'default' values
     public override string ToString() => ArgumentName;
 
-    private static readonly string _dynamicCompletionScript =
-        """
-        # Add the following content to your config.nu file:
+    public string GenerateCompletions(System.CommandLine.Command command)
+    {
+        var binary = command.Name;
+        return
+            $$"""
+            # Add the following content to your config.nu file:
 
-        let external_completer = { |spans|
-            {
-                dotnet: { ||
-                    dotnet complete (
-                        $spans | skip 1 | str join " "
-                    ) | lines
-                }
-            } | get $spans.0 | each { || do $in }
-        }
+            let external_completer = { |spans|
+                {
+                    "{{binary}}": { ||
+                        let line = ($spans | skip 1 | str join " ")
+                        {{binary}} $"[suggest:($line | str length)]" $line | lines
+                    }
+                } | get $spans.0 | each { || do $in }
+            }
 
-        # And then in the config record, find the completions section and add the
-        # external_completer that was defined earlier to external:
+            # And then in the config record, find the completions section and add the
+            # external_completer that was defined earlier to external:
 
-        let-env config = {
-            # your options here
-            completions: {
+            $env.config = {
                 # your options here
-                external: {
+                completions: {
                     # your options here
-                    completer: $external_completer # add it here
+                    external: {
+                        # your options here
+                        completer: $external_completer # add it here
+                    }
                 }
             }
-        }
-        """;
-
-    public string GenerateCompletions(System.CommandLine.Command command) => _dynamicCompletionScript;
+            """;
+    }
 }
