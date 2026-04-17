@@ -51,4 +51,12 @@ public class PowershellProviderTests(ITestOutputHelper log)
         var dynamicArg = new Argument<string>("target") { IsDynamic = true };
         await provider.Verify(new("mycommand") { dynamicArg }, log);
     }
+
+    [Fact]
+    public async Task DynamicCompletionsViaSubcommand()
+    {
+        var subcommandProvider = new PowerShellShellProvider { Invocation = CompletionInvocation.Subcommand() };
+        var dynamicArg = new Argument<string>("target") { IsDynamic = true };
+        await subcommandProvider.Verify(new("mycommand") { dynamicArg }, log);
+    }
 }

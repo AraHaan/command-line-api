@@ -50,4 +50,13 @@ public class BashShellProviderTests(ITestOutputHelper log)
         var dynamicArg = new Argument<string>("target") { IsDynamic = true };
         await provider.Verify(new("mycommand") { dynamicOption, dynamicArg }, log);
     }
+
+    [Fact]
+    public async Task DynamicCompletionsViaSubcommand()
+    {
+        var subcommandProvider = new BashShellProvider { Invocation = CompletionInvocation.Subcommand() };
+        var dynamicOption = new Option<string>("--name") { IsDynamic = true };
+        var dynamicArg = new Argument<string>("target") { IsDynamic = true };
+        await subcommandProvider.Verify(new("mycommand") { dynamicOption, dynamicArg }, log);
+    }
 }

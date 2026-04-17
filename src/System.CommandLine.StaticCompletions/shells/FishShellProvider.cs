@@ -13,6 +13,12 @@ public class FishShellProvider : IShellProvider
 
     public string HelpDescription => Strings.FishShellProvider_HelpDescription;
 
+    /// <summary>
+    /// Controls how the generated script invokes the application to resolve dynamic completions.
+    /// Defaults to the built-in <c>[suggest]</c> directive.
+    /// </summary>
+    public CompletionInvocation Invocation { get; init; } = CompletionInvocation.Directive();
+
     // override the ToString method to return the argument name so that CLI help is cleaner for 'default' values
     public override string ToString() => ArgumentName;
 
@@ -20,6 +26,14 @@ public class FishShellProvider : IShellProvider
     {
         var binary = command.Name;
         var safeName = binary.Replace('-', '_').Replace('.', '_');
+        var callLine = Invocation switch
+        {
+            CompletionInvocation.DirectiveInvocation d =>
+                $"""{binary} "[{d.Name}:$pos]" $line 2>/dev/null""",
+            CompletionInvocation.SubcommandInvocation s =>
+                $"""{binary} {s.Name} --position $pos $line 2>/dev/null""",
+            _ => throw new NotSupportedException($"Unknown invocation kind: {Invocation.GetType().Name}")
+        };
         return
             $$"""
             # fish parameter completion for {{binary}}
@@ -28,7 +42,7 @@ public class FishShellProvider : IShellProvider
             function __{{safeName}}_complete
                 set -l pos (commandline -C)
                 set -l line (commandline -cp)
-                {{binary}} "[suggest:$pos]" $line 2>/dev/null
+                {{callLine}}
             end
             complete -f -c {{binary}} -a '(__{{safeName}}_complete)'
             """;

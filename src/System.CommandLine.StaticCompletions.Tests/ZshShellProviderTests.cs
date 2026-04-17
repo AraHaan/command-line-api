@@ -86,4 +86,16 @@ public class ZshShellProviderTests(ITestOutputHelper log)
         };
         await _provider.Verify(command, log);
     }
+
+    [Fact]
+    public async Task DynamicCompletionsViaSubcommand()
+    {
+        var subcommandProvider = new ZshShellProvider { Invocation = CompletionInvocation.Subcommand() };
+        var staticOption = new Option<int>("--static") { IsDynamic = true };
+        staticOption.AcceptOnlyFromAmong("1", "2", "3");
+        var dynamicArg = new Argument<int>("--dynamic") { IsDynamic = true };
+        dynamicArg.CompletionSources.Add(context => [new("4"), new("5"), new("6")]);
+        Command command = new Command("my-app") { staticOption, dynamicArg };
+        await subcommandProvider.Verify(command, log);
+    }
 }
