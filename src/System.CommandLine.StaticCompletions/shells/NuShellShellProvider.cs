@@ -13,26 +13,12 @@ public class NushellShellProvider : IShellProvider
 
     public string HelpDescription => Strings.NuShellShellProvider_HelpDescription;
 
-    /// <summary>
-    /// Controls how the generated script invokes the application to resolve dynamic completions.
-    /// Defaults to the built-in <c>[suggest]</c> directive.
-    /// </summary>
-    public CompletionInvocation Invocation { get; init; } = CompletionInvocation.Directive();
-
     // override the ToString method to return the argument name so that CLI help is cleaner for 'default' values
     public override string ToString() => ArgumentName;
 
     public string GenerateCompletions(System.CommandLine.Command command)
     {
         var binary = command.Name;
-        var callLine = Invocation switch
-        {
-            CompletionInvocation.DirectiveInvocation d =>
-                $$"""{{binary}} $"[{{d.Name}}:($line | str length)]" $line | lines""",
-            CompletionInvocation.SubcommandInvocation s =>
-                $$"""{{binary}} {{s.Name}} --position ($line | str length) $line | lines""",
-            _ => throw new NotSupportedException($"Unknown invocation kind: {Invocation.GetType().Name}")
-        };
         return
             $$"""
             # Add the following content to your config.nu file:
@@ -41,7 +27,7 @@ public class NushellShellProvider : IShellProvider
                 {
                     "{{binary}}": { ||
                         let line = ($spans | skip 1 | str join " ")
-                        {{callLine}}
+                        {{binary}} $"[suggest:($line | str length)]" $line | lines
                     }
                 } | get $spans.0 | each { || do $in }
             }

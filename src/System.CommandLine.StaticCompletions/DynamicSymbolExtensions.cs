@@ -20,7 +20,7 @@ public static class DynamicSymbolExtensions
     {
         /// <summary>
         /// Indicates whether this option requires a dynamic call back into the application itself
-        /// (via the configured <see cref="CompletionInvocation"/>) to compute completions at completion time.
+        /// (via the built-in <c>[suggest]</c> directive) to compute completions at completion time.
         /// </summary>
         public bool IsDynamic
         {
@@ -45,7 +45,7 @@ public static class DynamicSymbolExtensions
     {
         /// <summary>
         /// Indicates whether this argument requires a dynamic call back into the application itself
-        /// (via the configured <see cref="CompletionInvocation"/>) to compute completions at completion time.
+        /// (via the built-in <c>[suggest]</c> directive) to compute completions at completion time.
         /// </summary>
         public bool IsDynamic
         {

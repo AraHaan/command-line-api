@@ -15,12 +15,6 @@ public class BashShellProvider : IShellProvider
 
     public string HelpDescription => Strings.BashShellProvider_HelpDescription;
 
-    /// <summary>
-    /// Controls how the generated script invokes the application to resolve dynamic completions.
-    /// Defaults to the built-in <c>[suggest]</c> directive.
-    /// </summary>
-    public CompletionInvocation Invocation { get; init; } = CompletionInvocation.Directive();
-
     // override the ToString method to return the argument name so that CLI help is cleaner for 'default' values
     public override string ToString() => ArgumentName;
 
@@ -132,7 +126,7 @@ public class BashShellProvider : IShellProvider
         return textWriter.ToString() + string.Join('\n', visibleSubcommands.Select(c => GenerateCommandsCompletions(parentCommandNamesForSubcommands, c, isNestedCommand: true)));
     }
 
-    internal string[] PositionalArgumentTerms(Argument[] arguments)
+    internal static string[] PositionalArgumentTerms(Argument[] arguments)
     {
         var completions = new List<string>();
         foreach (var argument in arguments)
@@ -155,19 +149,13 @@ public class BashShellProvider : IShellProvider
     }
 
     /// <summary>
-    /// Generates the bash expression that invokes the application to resolve dynamic completions,
-    /// using the configured <see cref="Invocation"/> strategy.
+    /// Generates the bash expression that invokes the application's <c>[suggest]</c> directive
+    /// to resolve dynamic completions.
     /// </summary>
-    internal string GenerateDynamicCall() => Invocation switch
-    {
-        CompletionInvocation.DirectiveInvocation d =>
-            $$"""${COMP_WORDS[0]} "[{{d.Name}}:${COMP_POINT}]" "${COMP_LINE}" 2>/dev/null | tr '\n' ' '""",
-        CompletionInvocation.SubcommandInvocation s =>
-            $$"""${COMP_WORDS[0]} {{s.Name}} --position ${COMP_POINT} "${COMP_LINE}" 2>/dev/null | tr '\n' ' '""",
-        _ => throw new NotSupportedException($"Unknown invocation kind: {Invocation.GetType().Name}")
-    };
+    internal static string GenerateDynamicCall() =>
+        """${COMP_WORDS[0]} "[suggest:${COMP_POINT}]" "${COMP_LINE}" 2>/dev/null | tr '\n' ' '""";
 
-    internal string? GenerateOptionHandlers(Command command)
+    internal static string? GenerateOptionHandlers(Command command)
     {
         var optionHandlers = command.Options.Where(o => !o.Hidden).Select(GenerateOptionHandler).Where(handler => handler is not null).ToArray();
         if (optionHandlers.Length == 0)
@@ -194,7 +182,7 @@ public class BashShellProvider : IShellProvider
     /// </summary>
     /// <param name="option"></param>
     /// <returns>a bash switch case expression for providing completions for this option</returns>
-    internal string? GenerateOptionHandler(Option option)
+    internal static string? GenerateOptionHandler(Option option)
     {
         // unlike the completion-options generation, for actually implementing suggestions we should be able to handle all of the options' aliases.
         // this ensures if the user manually enters an alias we can support that usage.

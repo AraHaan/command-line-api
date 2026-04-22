@@ -16,12 +16,6 @@ public class PowerShellShellProvider : IShellProvider
 
     public string HelpDescription => Strings.PowershellShellProvider_HelpDescription;
 
-    /// <summary>
-    /// Controls how the generated script invokes the application to resolve dynamic completions.
-    /// Defaults to the built-in <c>[suggest]</c> directive.
-    /// </summary>
-    public CompletionInvocation Invocation { get; init; } = CompletionInvocation.Directive();
-
     // override the ToString method to return the argument name so that CLI help is cleaner for 'default' values
     public override string ToString() => ArgumentName;
 
@@ -150,7 +144,7 @@ Register-ArgumentCompleter -Native -CommandName '{{{binaryName}}}' -ScriptBlock 
     /// <param name="writer"></param>
     /// <param name="command"></param>
     /// <remarks>Dynamically-generated completions are not yet supported</remarks>
-    internal void GenerateSubcommandCompletions(string[] parentCommandNames, IndentedTextWriter writer, Command command)
+    internal static void GenerateSubcommandCompletions(string[] parentCommandNames, IndentedTextWriter writer, Command command)
     {
         string[] commandNameList = parentCommandNames switch
         {
@@ -177,7 +171,7 @@ Register-ArgumentCompleter -Native -CommandName '{{{binaryName}}}' -ScriptBlock 
     /// <summary>
     /// Generate completions for the statically-known options, arguments, and subcommands of a given command.
     /// </summary>
-    private void GenerateStaticCompletionsForCommand(string[] commandPath, Command command, IndentedTextWriter writer)
+    private static void GenerateStaticCompletionsForCommand(string[] commandPath, Command command, IndentedTextWriter writer)
     {
         List<string> completions = new();
 
@@ -229,21 +223,13 @@ Register-ArgumentCompleter -Native -CommandName '{{{binaryName}}}' -ScriptBlock 
     }
 
     /// <summary>
-    /// Generate a call that invokes the application to produce dynamic argument completions
-    /// using the configured <see cref="Invocation"/> strategy, then binds the returned values as CompletionResults.
+    /// Generate a call that invokes the application's <c>[suggest]</c> directive to produce dynamic argument completions,
+    /// then binds the returned values as CompletionResults.
     /// </summary>
-    private void GenerateDynamicCompletionsCall(string binaryName, IndentedTextWriter writer)
+    private static void GenerateDynamicCompletionsCall(string binaryName, IndentedTextWriter writer)
     {
         writer.WriteLine("$text = $commandAst.ToString()");
-        var callExpr = Invocation switch
-        {
-            CompletionInvocation.DirectiveInvocation d =>
-                $"@(& '{binaryName}' \"[{d.Name}:$cursorPosition]\" $text)",
-            CompletionInvocation.SubcommandInvocation s =>
-                $"@(& '{binaryName}' '{s.Name}' --position $cursorPosition $text)",
-            _ => throw new NotSupportedException($"Unknown invocation kind: {Invocation.GetType().Name}")
-        };
-        writer.WriteLine($"$suggestResults = {callExpr} | Where-Object {{ $_ -NotMatch \"^-|^/\" }}");
+        writer.WriteLine($"$suggestResults = @(& '{binaryName}' \"[suggest:$cursorPosition]\" $text) | Where-Object {{ $_ -NotMatch \"^-|^/\" }}");
         writer.WriteLine("$dynamicCompletions = $suggestResults | Foreach-Object { [CompletionResult]::new($_, $_, [CompletionResultType]::ParameterValue, $_) }");
         writer.WriteLine("$completions += $dynamicCompletions");
     }

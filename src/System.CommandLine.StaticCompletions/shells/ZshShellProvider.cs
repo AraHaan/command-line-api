@@ -14,14 +14,10 @@ public class ZshShellProvider : IShellProvider
 
     public string HelpDescription => Strings.ZshShellProvider_HelpDescription;
 
-    /// <summary>
-    /// Controls how the generated script invokes the application to resolve dynamic completions.
-    /// Defaults to the built-in <c>[suggest]</c> directive.
-    /// </summary>
-    public CompletionInvocation Invocation { get; init; } = CompletionInvocation.Directive();
-
     // override the ToString method to return the argument name so that CLI help is cleaner for 'default' values
     public override string ToString() => ArgumentName;
+
+    private const string StateName = "suggest";
 
     public string GenerateCompletions(Command command)
     {
@@ -81,7 +77,7 @@ fi
         return textWriter.ToString();
     }
 
-    private void GenerateOptionsAndArgumentsForCommand(string binaryName, string[] commandPathForThisCommand, Command command, IndentedTextWriter writer)
+    private static void GenerateOptionsAndArgumentsForCommand(string binaryName, string[] commandPathForThisCommand, Command command, IndentedTextWriter writer)
     {
         var shouldWriteDynamicCompleter = false;
         foreach (var option in command.HierarchicalOptions())
@@ -184,7 +180,7 @@ fi
         }
     }
 
-    private void GenerateSubcommandList(string binaryName, string[] pathToCurrentCommand, Command command, IndentedTextWriter writer)
+    private static void GenerateSubcommandList(string binaryName, string[] pathToCurrentCommand, Command command, IndentedTextWriter writer)
     {
         if (command.Subcommands.Count == 0)
         {
@@ -228,20 +224,12 @@ fi
         writer.WriteLine("esac");
     }
 
-    private void GenerateDynamicCompleter(string binaryName, IndentedTextWriter writer)
+    private static void GenerateDynamicCompleter(string binaryName, IndentedTextWriter writer)
     {
         writer.WriteLine($"({StateName})");
         writer.Indent++;
         writer.WriteLine("local completions=()");
-        var callExpr = Invocation switch
-        {
-            CompletionInvocation.DirectiveInvocation d =>
-                $"$({binaryName} \"[{d.Name}:${{#original_args}}]\" \"${{original_args}}\" 2>/dev/null)",
-            CompletionInvocation.SubcommandInvocation s =>
-                $"$({binaryName} {s.Name} --position ${{#original_args}} \"${{original_args}}\" 2>/dev/null)",
-            _ => throw new NotSupportedException($"Unknown invocation kind: {Invocation.GetType().Name}")
-        };
-        writer.WriteLine($"local result={callExpr}");
+        writer.WriteLine($"local result=$({binaryName} \"[{StateName}:${{#original_args}}]\" \"${{original_args}}\" 2>/dev/null)");
         writer.WriteLine("for line in ${(f)result}; do");
         writer.Indent++;
         writer.WriteLine("completions+=(${(q)line})");
@@ -251,13 +239,6 @@ fi
         writer.Indent--;
         writer.WriteLine(";;");
     }
-
-    private string StateName => Invocation switch
-    {
-        CompletionInvocation.DirectiveInvocation d => d.Name,
-        CompletionInvocation.SubcommandInvocation s => s.Name,
-        _ => "suggest"
-    };
 
     private static void GenerateSubcommandHandlers(string[] pathToThisCommand, Command command, IndentedTextWriter writer)
     {
@@ -323,7 +304,7 @@ fi
             .Replace(" ", "\\ ")
         ?? "";
 
-    private string[]? ZshValueExpression(Option option)
+    private static string[]? ZshValueExpression(Option option)
     {
         if (option.IsDynamic)
         {
@@ -335,7 +316,7 @@ fi
         }
     }
 
-    private string[]? ZshValueExpression(Argument arg)
+    private static string[]? ZshValueExpression(Argument arg)
     {
         if (arg.IsDynamic)
         {
