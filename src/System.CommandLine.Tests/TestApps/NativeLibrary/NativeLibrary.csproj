@@ -1,4 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<!-- Uses the explicit SDK import form (rather than the Sdk="..." attribute) so the
+     System.CommandLine targets can be imported AFTER Sdk.targets - the same position a
+     NuGet package's build/ targets are imported for a real consumer. By then the SDK has
+     fully resolved IntermediateOutputPath (including the TFM/RID suffix), TargetFrameworkVersion,
+     Language, etc., which the executable-name code generation depends on. -->
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
@@ -23,10 +30,13 @@
     </Reference>
   </ItemGroup>
 
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
   <!-- The build targets are normally imported automatically from the NuGet
        package's build/ folder. Because this test references the raw assembly,
        import them explicitly so the executable-name module initializer is
-       generated for this NativeLib build. -->
+       generated for this NativeLib build. Imported after Sdk.targets so it sees
+       fully-resolved SDK properties, mirroring a real package consumer. -->
   <Import Project="..\..\..\System.CommandLine\build\System.CommandLine.targets" />
 
 </Project>
