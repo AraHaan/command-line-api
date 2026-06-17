@@ -69,12 +69,12 @@ namespace System.CommandLine
         /// The name of the currently running executable.
         /// </summary>
         public static string ExecutableName
-            => _executableName ??= Path.GetFileNameWithoutExtension(ExecutablePath).Replace(" ", "");
+            => _executableName ??= GetExecutableName();
 
         /// <summary>
         /// The path to the currently running executable.
         /// </summary>
-        public static string ExecutablePath => _executablePath ??= Environment.GetCommandLineArgs()[0];
+        public static string ExecutablePath => _executablePath ??= GetExecutablePath();
 
         private static string? ToolCommandName
         {
@@ -90,6 +90,29 @@ namespace System.CommandLine
 
                 return _toolCommandName;
             }
+        }
+
+        private static string GetExecutablePath()
+        {
+            var args = Environment.GetCommandLineArgs();
+            return args.Length > 0 ? args[0] : string.Empty;
+        }
+
+        private static string GetExecutableName()
+        {
+            var path = ExecutablePath;
+
+            if (path.Length > 0)
+            {
+                return Path.GetFileNameWithoutExtension(path).Replace(" ", "");
+            }
+
+            if (AppContext.GetData("System.CommandLine.ExecutableName") is string name && name.Length > 0)
+            {
+                return name;
+            }
+
+            return "app";
         }
     }
 }

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(NetMinimum)</TargetFramework>
+    <!-- Build as a NativeAOT shared library. In this hosting model there is no
+         managed entry point, so Environment.GetCommandLineArgs() returns an
+         empty array - the exact condition RootCommand's executable-name
+         fallback (issue #2812) is designed to handle. -->
+    <NativeLib>Shared</NativeLib>
+    <PublishAot>true</PublishAot>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <ControlFlowGuard>Guard</ControlFlowGuard>
+    <IsTestUtilityProject>true</IsTestUtilityProject>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SystemCommandLineDllPath Condition="'$(SystemCommandLineDllPath)'==''">..\..\..\System.CommandLine\bin\Release\$(NetMinimum)\System.CommandLine.dll</SystemCommandLineDllPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="SystemCommandLineDll">
+      <HintPath>$(SystemCommandLineDllPath)</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- The build targets are normally imported automatically from the NuGet
+       package's build/ folder. Because this test references the raw assembly,
+       import them explicitly so the executable-name module initializer is
+       generated for this NativeLib build. -->
+  <Import Project="..\..\..\System.CommandLine\build\System.CommandLine.targets" />
+
+</Project>
