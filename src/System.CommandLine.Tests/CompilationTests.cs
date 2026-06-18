@@ -90,8 +90,10 @@ public class CompilationTests
                 },
                 workingDirectory);
 
-            stdOut.ToString().Should().NotContain(": error CS");
-            exitCode.Should().Be(0);
+            string publishOutput = $"{Environment.NewLine}STDOUT:{Environment.NewLine}{stdOut}{Environment.NewLine}STDERR:{Environment.NewLine}{stdErr}";
+
+            stdOut.ToString().Should().NotContain(": error CS", "the native library should compile cleanly. Publish output:{0}", publishOutput);
+            exitCode.Should().Be(0, "the native library should publish successfully. Publish output:{0}", publishOutput);
 
             string nativeLibraryPath = Path.Combine(publishDirectory, NativeLibraryFileName("NativeLibrary"));
             File.Exists(nativeLibraryPath).Should().BeTrue($"the published native library should exist at {nativeLibraryPath}");
