@@ -4,6 +4,7 @@
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Xunit;
@@ -164,13 +165,25 @@ public partial class ParserTests
             result.GetValue(option).Should().Be("hello");
         }
 
-        public static TheoryData<string> PathLikeFirstArgsMatchingTheRootCommand =>
-        [
-            "./outer",
-            "tools/outer",
-            @".\outer",
-            @"tools\outer"
-        ];
+        public static TheoryData<string> PathLikeFirstArgsMatchingTheRootCommand
+        {
+            get
+            {
+                var data = new TheoryData<string>
+                {
+                    "./outer",
+                    "tools/outer"
+                };
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    data.Add(@".\outer");
+                    data.Add(@"tools\outer");
+                }
+
+                return data;
+            }
+        }
 
         [Fact]
         public void RootCommand_matches_its_executable_name_as_the_first_arg_the_same_way_a_named_Command_matches_its_name()

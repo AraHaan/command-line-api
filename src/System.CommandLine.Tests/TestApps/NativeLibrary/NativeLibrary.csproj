@@ -32,11 +32,15 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
+  <PropertyGroup>
+    <SystemCommandLineTargetsPath Condition="'$(SystemCommandLineTargetsPath)'==''">$(MSBuildThisFileDirectory)..\System.CommandLine.targets</SystemCommandLineTargetsPath>
+  </PropertyGroup>
+
   <!-- The build targets are normally imported automatically from the NuGet
        package's build/ folder. Because this test references the raw assembly,
        import them explicitly so the executable-name module initializer is
        generated for this NativeLib build. Imported after Sdk.targets so it sees
        fully-resolved SDK properties, mirroring a real package consumer. -->
-  <Import Project="..\..\..\System.CommandLine\build\System.CommandLine.targets" />
+  <Import Project="$(SystemCommandLineTargetsPath)" />
 
 </Project>
