@@ -59,11 +59,12 @@ public class CompilationTests
 
         var workingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestApps", "NativeLibrary");
         var publishDirectory = Path.Combine(Path.GetTempPath(), "scl-nativelib-" + Guid.NewGuid().ToString("N"));
+        var targetsPath = Path.Combine(Directory.GetCurrentDirectory(), "TestApps", "System.CommandLine.targets");
         string rId = GetPortableRuntimeIdentifier();
 
         Process.RunToCompletion(
             DotnetMuxer.Path.FullName,
-            $"clean -c Release -r {rId}",
+            $"clean -c Release -r {rId} -p:SystemCommandLineTargetsPath=\"{targetsPath}\"",
             workingDirectory: workingDirectory);
 
         var stdOut = new StringBuilder();
@@ -74,10 +75,11 @@ public class CompilationTests
             var exitCode = Process.RunToCompletion(
                 DotnetMuxer.Path.FullName,
                 string.Format(
-                    "publish -c Release -r {0} --self-contained -o \"{1}\" -p:SystemCommandLineDllPath=\"{2}\" -p:TreatWarningsAsErrors=true",
+                    "publish -c Release -r {0} --self-contained -o \"{1}\" -p:SystemCommandLineDllPath=\"{2}\" -p:SystemCommandLineTargetsPath=\"{3}\" -p:TreatWarningsAsErrors=true",
                     rId,
                     publishDirectory,
-                    _systemCommandLineDllPath),
+                    _systemCommandLineDllPath,
+                    targetsPath),
                 s =>
                 {
                     _output.WriteLine(s);
@@ -96,7 +98,18 @@ public class CompilationTests
             exitCode.Should().Be(0, "the native library should publish successfully. Publish output:{0}", publishOutput);
 
             string nativeLibraryPath = Path.Combine(publishDirectory, NativeLibraryFileName("NativeLibrary"));
-            File.Exists(nativeLibraryPath).Should().BeTrue($"the published native library should exist at {nativeLibraryPath}");
+
+            if (!File.Exists(nativeLibraryPath) && Directory.Exists(publishDirectory))
+            {
+                _output.WriteLine($"Expected native library at: {nativeLibraryPath}");
+                _output.WriteLine("Files in publish directory:");
+                foreach (var file in Directory.EnumerateFiles(publishDirectory, "*", SearchOption.AllDirectories))
+                {
+                    _output.WriteLine($"  {file}");
+                }
+            }
+
+            File.Exists(nativeLibraryPath).Should().BeTrue($"the published native library should exist at {nativeLibraryPath}. Publish output:{publishOutput}");
 
             string executableName = InvokeGetExecutableName(nativeLibraryPath);
 
