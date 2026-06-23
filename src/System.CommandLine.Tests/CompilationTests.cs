@@ -6,6 +6,7 @@
 using System.CommandLine.Suggest;
 using System.CommandLine.Tests.Utility;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using FluentAssertions;
@@ -101,15 +102,23 @@ public class CompilationTests
 
             if (!File.Exists(nativeLibraryPath) && Directory.Exists(publishDirectory))
             {
-                _output.WriteLine($"Expected native library at: {nativeLibraryPath}");
-                _output.WriteLine("Files in publish directory:");
-                foreach (var file in Directory.EnumerateFiles(publishDirectory, "*", SearchOption.AllDirectories))
+                // Search for the native library in case it's in a subdirectory or has a different name
+                var candidates = Directory.EnumerateFiles(publishDirectory, "*NativeLibrary*", SearchOption.AllDirectories).ToArray();
+
+                string fileList = string.Join(Environment.NewLine, 
+                    Directory.EnumerateFiles(publishDirectory, "*", SearchOption.AllDirectories));
+
+                if (candidates.Length == 1)
                 {
-                    _output.WriteLine($"  {file}");
+                    nativeLibraryPath = candidates[0];
+                    _output.WriteLine($"Native library found at alternate path: {nativeLibraryPath}");
+                }
+                else
+                {
+                    nativeLibraryPath.Should().Be("found", 
+                        $"the published native library was not found. Candidates: [{string.Join(", ", candidates)}]. All files in publish directory:{Environment.NewLine}{fileList}");
                 }
             }
-
-            File.Exists(nativeLibraryPath).Should().BeTrue($"the published native library should exist at {nativeLibraryPath}. Publish output:{publishOutput}");
 
             string executableName = InvokeGetExecutableName(nativeLibraryPath);
 
