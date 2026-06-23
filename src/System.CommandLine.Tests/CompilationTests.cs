@@ -111,9 +111,16 @@ public class CompilationTests
         }
         finally
         {
-            if (Directory.Exists(publishDirectory))
+            try
             {
-                Directory.Delete(publishDirectory, recursive: true);
+                if (Directory.Exists(publishDirectory))
+                {
+                    Directory.Delete(publishDirectory, recursive: true);
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // On Windows the native library may still be locked after NativeLibrary.Free
             }
         }
     }
