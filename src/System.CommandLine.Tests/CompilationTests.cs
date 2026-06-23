@@ -100,25 +100,8 @@ public class CompilationTests
 
             string nativeLibraryPath = Path.Combine(publishDirectory, NativeLibraryFileName("NativeLibrary"));
 
-            if (!File.Exists(nativeLibraryPath) && Directory.Exists(publishDirectory))
-            {
-                // Search for the native library in case it's in a subdirectory or has a different name
-                var candidates = Directory.EnumerateFiles(publishDirectory, "*NativeLibrary*", SearchOption.AllDirectories).ToArray();
-
-                string fileList = string.Join(Environment.NewLine, 
-                    Directory.EnumerateFiles(publishDirectory, "*", SearchOption.AllDirectories));
-
-                if (candidates.Length == 1)
-                {
-                    nativeLibraryPath = candidates[0];
-                    _output.WriteLine($"Native library found at alternate path: {nativeLibraryPath}");
-                }
-                else
-                {
-                    nativeLibraryPath.Should().Be("found", 
-                        $"the published native library was not found. Candidates: [{string.Join(", ", candidates)}]. All files in publish directory:{Environment.NewLine}{fileList}");
-                }
-            }
+            File.Exists(nativeLibraryPath).Should().BeTrue(
+                "the published native library should exist at {0}. Publish output:{1}", nativeLibraryPath, publishOutput);
 
             string executableName = InvokeGetExecutableName(nativeLibraryPath);
 
@@ -137,8 +120,8 @@ public class CompilationTests
 
     private static string NativeLibraryFileName(string assemblyName) =>
         OperatingSystem.IsWindows() ? $"{assemblyName}.dll"
-            : OperatingSystem.IsMacOS() ? $"lib{assemblyName}.dylib"
-            : $"lib{assemblyName}.so";
+            : OperatingSystem.IsMacOS() ? $"{assemblyName}.dylib"
+            : $"{assemblyName}.so";
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int GetExecutableNameDelegate(IntPtr buffer, int bufferLength);
