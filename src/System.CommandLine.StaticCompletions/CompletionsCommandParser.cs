@@ -37,8 +37,26 @@ public sealed class CompletionsCommandParser
             var shellName = args.GetValue(command.GenerateScriptCommand.ShellArgument) ?? throw new InvalidOperationException();
             var shell = ShellProviders[shellName];
 
-            var script = shell.GenerateCompletions(args.RootCommandResult.Command);
+            var rootCommand = args.RootCommandResult.Command;
+
+            // the generated scripts resolve dynamic completions by calling back into the application
+            // via the [suggest] directive - if that directive has been removed from the root command,
+            // those parts of the script will silently do nothing, so let the user know at generation time.
+            if (HasDynamicSymbols(rootCommand) && !HasSuggestDirective(rootCommand))
+            {
+                args.InvocationConfiguration.Error.WriteLine(Resources.Strings.GenerateCommand_SuggestDirectiveDisabledWarning);
+            }
+
+            var script = shell.GenerateCompletions(rootCommand);
             args.InvocationConfiguration.Output.Write(script);
         });
     }
+
+    private static bool HasSuggestDirective(Command command) =>
+        command is RootCommand root && root.Directives.OfType<SuggestDirective>().Any();
+
+    private static bool HasDynamicSymbols(Command command) =>
+        command.Options.Any(o => !o.Hidden && o.IsDynamic) ||
+        command.Arguments.Any(a => !a.Hidden && a.IsDynamic) ||
+        command.Subcommands.Where(c => !c.Hidden).Any(HasDynamicSymbols);
 }

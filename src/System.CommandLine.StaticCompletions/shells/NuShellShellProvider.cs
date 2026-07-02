@@ -21,30 +21,16 @@ public class NushellShellProvider : IShellProvider
         var binary = command.Name;
         return
             $$"""
-            # Add the following content to your config.nu file:
+            # nushell completions for {{binary}}
+            # save this file and `source` it from your nushell config
 
-            let external_completer = { |spans|
-                {
-                    "{{binary}}": { ||
-                        let line = ($spans | skip 1 | str join " ")
-                        {{binary}} $"[suggest:($line | str length)]" $line | lines
-                    }
-                } | get $spans.0 | each { || do $in }
+            def "nu-complete {{binary}}" [context: string] {
+                ^{{binary}} $"[suggest:($context | str length)]" $context | lines
             }
 
-            # And then in the config record, find the completions section and add the
-            # external_completer that was defined earlier to external:
-
-            $env.config = {
-                # your options here
-                completions: {
-                    # your options here
-                    external: {
-                        # your options here
-                        completer: $external_completer # add it here
-                    }
-                }
-            }
+            export extern "{{binary}}" [
+                ...command: string@"nu-complete {{binary}}"
+            ]
             """;
     }
 }

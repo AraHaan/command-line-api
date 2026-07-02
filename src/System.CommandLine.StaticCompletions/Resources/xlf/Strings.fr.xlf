@@ -27,6 +27,11 @@
         <target state="translated">Générez le script d’achèvement pour un shell pris en charge</target>
         <note />
       </trans-unit>
+      <trans-unit id="GenerateCommand.SuggestDirectiveDisabledWarning">
+        <source>warning: this application has completions that are resolved dynamically, but the [suggest] directive is not enabled on the root command. Dynamic completions will not work in the generated script.</source>
+        <target state="new">warning: this application has completions that are resolved dynamically, but the [suggest] directive is not enabled on the root command. Dynamic completions will not work in the generated script.</target>
+        <note>{Locked="[suggest]"}</note>
+      </trans-unit>
       <trans-unit id="NuShellShellProvider.HelpDescription">
         <source>Generates a completion script for the NuShell shell.</source>
         <target state="translated">Génère un script d’achèvement pour l’interpréteur de commandes NuShell.</target>

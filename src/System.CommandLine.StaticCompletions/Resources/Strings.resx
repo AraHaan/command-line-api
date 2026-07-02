@@ -133,6 +133,10 @@
   <data name="GenerateCommand.Description" xml:space="preserve">
     <value>Generate the completion script for a supported shell</value>
   </data>
+  <data name="GenerateCommand.SuggestDirectiveDisabledWarning" xml:space="preserve">
+    <value>warning: this application has completions that are resolved dynamically, but the [suggest] directive is not enabled on the root command. Dynamic completions will not work in the generated script.</value>
+    <comment>{Locked="[suggest]"}</comment>
+  </data>
   <data name="BashShellProvider.HelpDescription" xml:space="preserve">
     <value>Generates a completion script for the Bourne Again SHell (bash).</value>
     <comment>{Locked="Bourne Again SHell (bash)"}</comment>
