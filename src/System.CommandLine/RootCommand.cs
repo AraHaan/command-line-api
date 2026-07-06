@@ -68,6 +68,14 @@ namespace System.CommandLine
         /// <summary>
         /// The name of the currently running executable.
         /// </summary>
+        /// <remarks>
+        /// The name is resolved in the following order:
+        /// <list type="number">
+        ///   <item><description>The file name (without extension) of the currently running executable, when available from <see cref="Environment.GetCommandLineArgs"/>.</description></item>
+        ///   <item><description>The <c>System.CommandLine.ExecutableName</c> value read from <see cref="AppContext"/>. This is emitted into the app's <c>runtimeconfig.json</c> by the <c>System.CommandLine</c> build targets (defaulting to the assembly name) and is used when there is no managed entry point - notably when hosted as a NativeAOT native library, where <see cref="Environment.GetCommandLineArgs"/> returns an empty array.</description></item>
+        ///   <item><description>The literal <c>"app"</c>, as a final fallback.</description></item>
+        /// </list>
+        /// </remarks>
         public static string ExecutableName
             => _executableName ??= GetExecutableName();
 

@@ -24,4 +24,13 @@
 
   </Target>
 
+  <!-- Emit the ToolCommandName as assembly metadata so RootCommand.HelpName can default to it at
+       runtime. Applies to direct and transitive consumers alike. -->
+  <ItemGroup Condition="'$(ToolCommandName)' != ''">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>System.CommandLine.ToolCommandName</_Parameter1>
+      <_Parameter2>$(ToolCommandName)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>
