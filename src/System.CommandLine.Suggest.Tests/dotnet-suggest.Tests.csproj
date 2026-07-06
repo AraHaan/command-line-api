@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\System.CommandLine.Suggest\dotnet-suggest.csproj" />
+    <ProjectReference Include="..\System.CommandLine.Suggest\dotnet-suggest.csproj" Private="false" />
     <ProjectReference Include="..\System.CommandLine.Tests\System.CommandLine.Tests.csproj" />
 
     <!-- Sequence into build to make sure that publish assets are available for tests. -->
