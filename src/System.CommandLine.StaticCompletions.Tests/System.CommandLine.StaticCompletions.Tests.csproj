@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <GenerateProgramFile>false</GenerateProgramFile>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
