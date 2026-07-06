@@ -48,16 +48,10 @@ public class CompilationTests
     public void RootCommand_name_falls_back_to_the_AppContext_value_when_hosted_as_a_native_library()
     {
         // When System.CommandLine is hosted inside a NativeAOT shared library there is no
-        // managed entry point, so Environment.GetCommandLineArgs() returns an empty array.
-        // RootCommand must then fall back to the executable name injected into AppContext by
-        // the build targets (the assembly name) rather than throwing. This exercises that
-        // path end-to-end through a real native library build.
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Re-enable OSX validation when TFM is upgraded to net8.0.
-            return;
-        }
-
+        // managed entry point (Assembly.GetEntryAssembly() returns null) and
+        // Environment.GetCommandLineArgs() reflects the host process. RootCommand must then
+        // fall back to the executable name injected into AppContext by the build targets (the
+        // assembly name). This exercises that path end-to-end through a real native library build.
         var workingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestApps", "NativeLibrary");
         var publishDirectory = Path.Combine(Path.GetTempPath(), "scl-nativelib-" + Guid.NewGuid().ToString("N"));
         var targetsPath = Path.Combine(Directory.GetCurrentDirectory(), "TestApps", "System.CommandLine.targets");
