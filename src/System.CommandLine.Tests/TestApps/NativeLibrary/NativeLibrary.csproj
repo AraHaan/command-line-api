@@ -2,7 +2,7 @@
      System.CommandLine targets can be imported AFTER Sdk.targets - the same position a
      NuGet package's build/ targets are imported for a real consumer. By then the SDK has
      fully resolved IntermediateOutputPath (including the TFM/RID suffix), TargetFrameworkVersion,
-     Language, etc., which the executable-name code generation depends on. -->
+     Language, etc., mirroring how a real package consumer sees them. -->
 <Project>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
@@ -38,8 +38,8 @@
 
   <!-- The build targets are normally imported automatically from the NuGet
        package's build/ folder. Because this test references the raw assembly,
-       import them explicitly so the executable-name module initializer is
-       generated for this NativeLib build. Imported after Sdk.targets so it sees
+       import them explicitly so the executable-name configProperty is emitted
+       for this NativeLib build. Imported after Sdk.targets so it sees
        fully-resolved SDK properties, mirroring a real package consumer. -->
   <Import Project="$(SystemCommandLineTargetsPath)" />
 
