@@ -10,9 +10,10 @@ using System.Text;
 public static class Exports
 {
     // Exported native symbol. Builds a RootCommand and returns its Name as UTF-8.
-    // When hosted as a native library, Environment.GetCommandLineArgs() is empty,
-    // so RootCommand.ExecutableName falls back to the AppContext value injected by
-    // the System.CommandLine build targets (which is the assembly name).
+    // When hosted as a native library there is no managed entry point
+    // (Assembly.GetEntryAssembly() returns null) and Environment.GetCommandLineArgs()
+    // reflects the host process, so RootCommand.ExecutableName falls back to the
+    // AppContext value injected by the System.CommandLine build targets (the assembly name).
     //
     // Two-call protocol: pass a null buffer to get the required length, then call
     // again with a buffer of that size. Returns the number of UTF-8 bytes.

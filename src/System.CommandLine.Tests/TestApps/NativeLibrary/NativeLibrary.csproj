@@ -10,9 +10,9 @@
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
     <!-- Build as a NativeAOT shared library. In this hosting model there is no
-         managed entry point, so Environment.GetCommandLineArgs() returns an
-         empty array - the exact condition RootCommand's executable-name
-         fallback (issue #2812) is designed to handle. -->
+         managed entry point (Assembly.GetEntryAssembly() returns null) and
+         Environment.GetCommandLineArgs() reflects the host process - the exact
+         condition RootCommand's executable-name fallback (issue #2812) handles. -->
     <NativeLib>Shared</NativeLib>
     <PublishAot>true</PublishAot>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>

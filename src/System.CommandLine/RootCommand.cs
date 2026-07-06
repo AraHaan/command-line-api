@@ -71,8 +71,9 @@ namespace System.CommandLine
         /// <remarks>
         /// The name is resolved in the following order:
         /// <list type="number">
-        ///   <item><description>The file name (without extension) of the currently running executable, when available from <see cref="Environment.GetCommandLineArgs"/>.</description></item>
-        ///   <item><description>The <c>System.CommandLine.ExecutableName</c> value read from <see cref="AppContext"/>. This is emitted into the app's <c>runtimeconfig.json</c> by the <c>System.CommandLine</c> build targets (defaulting to the assembly name) and is used when there is no managed entry point - notably when hosted as a NativeAOT native library, where <see cref="Environment.GetCommandLineArgs"/> returns an empty array.</description></item>
+        ///   <item><description>The <c>System.CommandLine.ExecutableName</c> value read from <see cref="AppContext"/>, when there is no managed entry point (<see cref="Assembly.GetEntryAssembly"/> returns <see langword="null"/>) - most notably when hosted as a NativeAOT native library. In that case <see cref="Environment.GetCommandLineArgs"/> reflects the host process rather than this component. The value is emitted into the app's <c>runtimeconfig.json</c> by the <c>System.CommandLine</c> build targets and defaults to the assembly name.</description></item>
+        ///   <item><description>The file name (without extension) of the currently running executable, from <see cref="Environment.GetCommandLineArgs"/>.</description></item>
+        ///   <item><description>The <c>System.CommandLine.ExecutableName</c> value from <see cref="AppContext"/>, if the executable path was unavailable.</description></item>
         ///   <item><description>The literal <c>"app"</c>, as a final fallback.</description></item>
         /// </list>
         /// </remarks>
@@ -108,6 +109,18 @@ namespace System.CommandLine
 
         private static string GetExecutableName()
         {
+            // When there is no managed entry point - most notably when hosted as a NativeAOT
+            // native library - Environment.GetCommandLineArgs() reflects the host process (its
+            // first element is the host executable, e.g. "dotnet") rather than this component.
+            // In that case prefer the executable name injected by the build targets via
+            // AppContext (issue #2812).
+            if (Assembly.GetEntryAssembly() is null
+                && AppContext.GetData("System.CommandLine.ExecutableName") is string injectedName
+                && injectedName.Length > 0)
+            {
+                return injectedName;
+            }
+
             var path = ExecutablePath;
 
             if (path.Length > 0)
